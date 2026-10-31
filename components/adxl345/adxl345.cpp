@@ -13,25 +13,36 @@ static const uint8_t REG_POWER_CTL   = 0x2D;
 static const uint8_t REG_DATA_FORMAT = 0x31;
 static const uint8_t REG_DATAX0      = 0x32;
 
-void ADXL345Component::setup() {
+void ADXL345Component::setup()
+{
   ESP_LOGCONFIG(TAG, "Setting up ADXL345...");
 
   // Check device ID
   uint8_t devid;
-  if (this->read_register(REG_DEVID, &devid, 1) != i2c::ERROR_OK || devid != 0xE5) {
+  if (this->read_register(REG_DEVID, &devid, 1) != i2c::ERROR_OK || devid != 0xE5)
+  {
     ESP_LOGE(TAG, "ADXL345 not found at 0x%02X (id=0x%02X)", this->address_, devid);
     this->mark_failed();
     return;
   }
   ESP_LOGI(TAG, "Found ADXL345 at 0x%02X", this->address_);
 
-  // Set range
-  uint8_t range_bits = 0;
-  switch (this->range_) {
-    case 0: range_bits = 0x00; break; // ±2g
-    case 1: range_bits = 0x01; break; // ±4g
-    case 2: range_bits = 0x02; break; // ±8g
-    case 3: range_bits = 0x03; break; // ±16g
+  // Set range and enable FULL_RES bit (0x08)
+  uint8_t range_bits = 0x08; // Bit 3 set: FULL_RES mode (4 mg/LSB across all ranges)
+  switch (this->range_)
+  {
+  case 0:
+    range_bits |= 0x00;
+    break; // ±2g
+  case 1:
+    range_bits |= 0x01;
+    break; // ±4g
+  case 2:
+    range_bits |= 0x02;
+    break; // ±8g
+  case 3:
+    range_bits |= 0x03;
+    break; // ±16g
   }
   this->write_register(REG_DATA_FORMAT, &range_bits, 1);
 
